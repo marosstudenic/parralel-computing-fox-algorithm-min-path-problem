@@ -388,8 +388,8 @@ void print_matrix_stdout(int rank, int matrix_size, int *matrix)
 
 void circular_column_shift(int blck_size, int *matrix, int my_row, int steps, int m, MPI_Comm col_comm)
 {
-    int source = (my_row - 1 + m) % m;
-    int dest = (my_row + 1) % m;
+    int source = (my_row + 1 + m) % m;
+    int dest = (my_row - 1 + m) % m;
 
     MPI_Sendrecv_replace(matrix, blck_size * blck_size, MPI_INT, dest, 1, source, 1, col_comm, MPI_STATUS_IGNORE);
 }
