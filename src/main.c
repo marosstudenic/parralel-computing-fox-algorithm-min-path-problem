@@ -111,7 +111,6 @@ int main(int argc, char *argv[])
     int blck_size = matrix_size / m;
 
     int *matrix_part = (int *)malloc(blck_size * blck_size * sizeof(int));
-
     int *reoordered_matrix = (int *)malloc(matrix_size * matrix_size * sizeof(int));
 
     // reorder matrix
@@ -242,7 +241,7 @@ int main(int argc, char *argv[])
     // we need to replace all infinity with 0
     // we need to reorder it and gather in rank 0 process
 
-    int solution_matrix_wrong_order[m * blck_size * blck_size];
+    int *solution_matrix_wrong_order = (int *)malloc(matrix_size * matrix_size * sizeof(int));
 
     MPI_Gather(matrixA, blck_size * blck_size, MPI_INT, solution_matrix_wrong_order, blck_size * blck_size, MPI_INT, 0, MPI_COMM_WORLD);
 
