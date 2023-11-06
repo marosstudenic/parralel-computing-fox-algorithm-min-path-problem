@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
     int my_col = grid_coords[1];
 
     // create matrix
-    int matrix[matrix_size][matrix_size];
+    int *matrix = (int *)malloc(matrix_size * matrix_size * sizeof(int));
     int matrix_part[matrix_size / m][matrix_size / m];
 
     // read matrix from input
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
         {
             for (int j = 0; j < matrix_size; j++)
             {
-                scanf("%d", &matrix[i][j]);
+                scanf("%d", &matrix[i * matrix_size + j]);
             }
         }
     }
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 
                 int index_in_array = block_i * blck_size * blck_size + index_in_block;
                 int tmp;
-                tmp = matrix[row_i][col_i];
+                tmp = matrix[row_i * matrix_size + col_i];
 
                 // we need to replace all 0 with infinity, except diagonal, because there is no edge between there
                 if (tmp == 0 && row_i != col_i)
