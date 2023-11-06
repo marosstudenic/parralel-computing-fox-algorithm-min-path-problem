@@ -1,2 +1,4 @@
 fox
 output/
+build/
+.vscode/
