@@ -1,0 +1,31 @@
+To organize the provided execution times into a table, we will list the execution times for each input size and the number of processes. The "Test passed" status will be indicated as a "Pass" and "Test failed" as "Fail". Here's the data structured into a tabular format:
+
+| Algorithm       | Processes | Input Size | Execution Time | Test Status |
+|-----------------|-----------|------------|----------------|-------------|
+| Floyd-Warshal   | -         | 6          | 0:00.00        | Pass        |
+| Floyd-Warshal   | -         | 300        | 0:00.14        | Pass        |
+| Floyd-Warshal   | -         | 600        | 0:01.12        | Pass        |
+| Floyd-Warshal   | -         | 900        | 0:03.72        | Pass        |
+| Floyd-Warshal   | -         | 1200       | 0:08.76        | Pass        |
+| Fox             | 16        | 6          | 0:03.95        | Fail        |
+| Fox             | 16        | 300        | 0:01.97        | Pass        |
+| Fox             | 16        | 600        | 0:02.92        | Pass        |
+| Fox             | 16        | 900        | 0:05.46        | Pass        |
+| Fox             | 16        | 1200       | 0:10.86        | Pass        |
+| Fox             | 9         | 6          | 0:01.82        | Pass        |
+| Fox             | 9         | 300        | 0:02.05        | Pass        |
+| Fox             | 9         | 600        | 0:03.60        | Pass        |
+| Fox             | 9         | 900        | 0:07.81        | Pass        |
+| Fox             | 9         | 1200       | 0:17.34        | Pass        |
+| Fox             | 4         | 6          | 0:01.73        | Pass        |
+| Fox             | 4         | 300        | 0:02.15        | Pass        |
+| Fox             | 4         | 600        | 0:05.25        | Pass        |
+| Fox             | 4         | 900        | 0:14.56        | Pass        |
+| Fox             | 4         | 1200       | 0:34.39        | Pass        |
+| Fox             | 1         | 6          | 0:01.70        | Pass        |
+| Fox             | 1         | 300        | 0:03.25        | Pass        |
+| Fox             | 1         | 600        | 0:15.59        | Pass        |
+| Fox             | 1         | 900        | 0:49.63        | Pass        |
+| Fox             | 1         | 1200       | 2:05.14        | Pass        |
+
+This table provides a clear comparison of the execution times for different input sizes across the two algorithms and varying numbers of processes. The single failed test for the Fox algorithm with 16 processes and input size 6 is also noted.

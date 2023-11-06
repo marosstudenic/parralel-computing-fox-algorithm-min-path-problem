@@ -1,0 +1,77 @@
+Running floyd-warshal with input size 6
+Execution time: 0:00.00
+Test passed: Output matches for input size 6
+Running floyd-warshal with input size 300
+Execution time: 0:00.14
+Test passed: Output matches for input size 300
+Running floyd-warshal with input size 600
+Execution time: 0:01.12
+Test passed: Output matches for input size 600
+Running floyd-warshal with input size 900
+Execution time: 0:03.72
+Test passed: Output matches for input size 900
+Running floyd-warshal with input size 1200
+Execution time: 0:08.76
+Test passed: Output matches for input size 1200
+Running fox with 16 processes and input size 6
+EDITED: can run agains this test with 16 processes
+Command exited with non-zero status 1
+Execution time: 0:03.95
+Test failed: Output does not match for 16 processes and input size 6
+Running fox with 16 processes and input size 300
+Execution time: 0:01.97
+Test passed: Output matches for 16 processes and input size 300
+Running fox with 16 processes and input size 600
+Execution time: 0:02.92
+Test passed: Output matches for 16 processes and input size 600
+Running fox with 16 processes and input size 900
+Execution time: 0:05.46
+Test passed: Output matches for 16 processes and input size 900
+Running fox with 16 processes and input size 1200
+Execution time: 0:10.86
+Test passed: Output matches for 16 processes and input size 1200
+Running fox with 9 processes and input size 6
+Execution time: 0:01.82
+Test passed: Output matches for 9 processes and input size 6
+Running fox with 9 processes and input size 300
+Execution time: 0:02.05
+Test passed: Output matches for 9 processes and input size 300
+Running fox with 9 processes and input size 600
+Execution time: 0:03.60
+Test passed: Output matches for 9 processes and input size 600
+Running fox with 9 processes and input size 900
+Execution time: 0:07.81
+Test passed: Output matches for 9 processes and input size 900
+Running fox with 9 processes and input size 1200
+Execution time: 0:17.34
+Test passed: Output matches for 9 processes and input size 1200
+Running fox with 4 processes and input size 6
+Execution time: 0:01.73
+Test passed: Output matches for 4 processes and input size 6
+Running fox with 4 processes and input size 300
+Execution time: 0:02.15
+Test passed: Output matches for 4 processes and input size 300
+Running fox with 4 processes and input size 600
+Execution time: 0:05.25
+Test passed: Output matches for 4 processes and input size 600
+Running fox with 4 processes and input size 900
+Execution time: 0:14.56
+Test passed: Output matches for 4 processes and input size 900
+Running fox with 4 processes and input size 1200
+Execution time: 0:34.39
+Test passed: Output matches for 4 processes and input size 1200
+Running fox with 1 processes and input size 6
+Execution time: 0:01.70
+Test passed: Output matches for 1 processes and input size 6
+Running fox with 1 processes and input size 300
+Execution time: 0:03.25
+Test passed: Output matches for 1 processes and input size 300
+Running fox with 1 processes and input size 600
+Execution time: 0:15.59
+Test passed: Output matches for 1 processes and input size 600
+Running fox with 1 processes and input size 900
+Execution time: 0:49.63
+Test passed: Output matches for 1 processes and input size 900
+Running fox with 1 processes and input size 1200
+Execution time: 2:05.14
+Test passed: Output matches for 1 processes and input size 1200
