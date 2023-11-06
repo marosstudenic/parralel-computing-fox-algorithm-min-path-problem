@@ -145,6 +145,7 @@ int main(int argc, char *argv[])
 
     // scatter matrix to processes
     MPI_Scatter(reoordered_matrix, matrix_size * matrix_size / nproc, MPI_INT, matrix_part, matrix_size * matrix_size / nproc, MPI_INT, 0, MPI_COMM_WORLD);
+    free(reoordered_matrix);
 
     // print matrix
     // print_matrix(my_rank, matrix_size / m, matrix_part, CUSTOM_PRINT);
@@ -163,6 +164,8 @@ int main(int argc, char *argv[])
             matrix_partial_solution[row_i * blck_size + col_i] = MY_INFINITY;
         }
     }
+
+    free(matrix_part);
 
     int traveled_distance = 0;
 
@@ -268,6 +271,7 @@ int main(int argc, char *argv[])
             }
         }
         print_matrix(my_rank, matrix_size, solution_matrix, STDOUT_PRINT);
+        free(solution_matrix);
     }
 
     MPI_Finalize();
