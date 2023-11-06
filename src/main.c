@@ -345,7 +345,11 @@ void print_matrix_custom(int rank, int matrix_size, int matrix[matrix_size][matr
     {
         for (int j = 0; j < matrix_size; j++)
         {
-            custom_print(rank, "%d ", matrix[i][j]);
+            custom_print(rank, "%d", matrix[i][j]);
+            if (j != matrix_size - 1)
+            {
+                custom_print(rank, " ");
+            }
         }
         custom_print(rank, "\n");
     }
@@ -357,7 +361,11 @@ void print_matrix_stdout(int rank, int matrix_size, int matrix[matrix_size][matr
     {
         for (int j = 0; j < matrix_size; j++)
         {
-            printf("%d ", matrix[i][j]);
+            printf("%d", matrix[i][j]);
+            if (j != matrix_size - 1)
+            {
+                printf(" ");
+            }
         }
         printf("\n");
     }
