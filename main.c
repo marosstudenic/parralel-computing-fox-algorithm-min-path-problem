@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
 
     // print matrix
     print_matrix(my_rank, matrix_size / m, matrix_part, 1);
+    // add comment
 
     MPI_Finalize();
 }
