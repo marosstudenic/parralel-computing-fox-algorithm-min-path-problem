@@ -298,18 +298,6 @@ int main(int argc, char *argv[])
 
     MPI_Finalize();
 
-    // while (distance_traveled < matrix_size)
-    // {
-    //     // perform minplus
-
-    //     // in minplus obtain matrixA and matrixB
-    //     // row broadcast matrixA
-    //     // local minplus
-    //     // column shift matrixB
-
-    //     // row broadcast matrixA
-    //     row_broadcast(matrixA, temp_matrix, blck_size, step, my_row, my_rank, m, row_comm);
-    // }
 }
 
 // print function which prints output to file based on rank
