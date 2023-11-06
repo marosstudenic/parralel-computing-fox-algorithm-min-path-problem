@@ -172,8 +172,18 @@ int main(int argc, char *argv[])
 
     int traveled_distance = 0;
 
+    if (my_rank == 0)
+    {
+        printf("starting to compute\n");
+    }
+
     while (traveled_distance < matrix_size)
     {
+        if (my_rank == 0)
+        {
+            printf("traveled distance: %d from %d\n", traveled_distance, matrix_size);
+        }
+
         for (int step = 0; step < m; step++)
         {
             // custom_print(my_rank, "step: %d\n", step);
@@ -276,6 +286,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        printf("solution in output/proc-0.out\n");
         print_matrix(my_rank, matrix_size, solution_matrix, CUSTOM_PRINT);
         free(solution_matrix);
     }
