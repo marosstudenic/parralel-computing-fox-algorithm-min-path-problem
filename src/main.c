@@ -12,6 +12,7 @@
 #define STDOUT_PRINT 0
 #define MY_INFINITY INT_MAX
 #define DIM 2
+#define VERBOSE 0
 // TODO:
 // check number of processes
 // create grid communicator
@@ -172,14 +173,14 @@ int main(int argc, char *argv[])
 
     int traveled_distance = 0;
 
-    if (my_rank == 0)
+    if (my_rank == 0 && VERBOSE)
     {
         printf("starting to compute\n");
     }
 
     while (traveled_distance < matrix_size)
     {
-        if (my_rank == 0)
+        if (my_rank == 0 && VERBOSE)
         {
             printf("traveled distance: %d from %d\n", traveled_distance, matrix_size);
         }
@@ -260,7 +261,8 @@ int main(int argc, char *argv[])
 
     int *solution_matrix_wrong_order = (int *)malloc(matrix_size * matrix_size * sizeof(int));
 
-    MPI_Gather(matrixA, blck_size * blck_size, MPI_INT, solution_matrix_wrong_order, blck_size * blck_size, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Gather(matrixA, blck_size * blck_size, MPI_INT, solution_matrix_wrong_order, blck_size * blck_size, MPI_INT, 0, MPI_COMM_WORLD); 
+
     free(matrixA);
     free(matrixB);
     free(matrix_partial_solution);
@@ -286,9 +288,12 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        printf("solution in output/proc-0.out\n");
-        print_matrix(my_rank, matrix_size, solution_matrix, CUSTOM_PRINT);
+        print_matrix(my_rank, matrix_size, solution_matrix, STDOUT_PRINT);
         free(solution_matrix);
+    }
+
+    if (VERBOSE) {
+        printf("rank: %d\n", my_rank);
     }
 
     MPI_Finalize();
