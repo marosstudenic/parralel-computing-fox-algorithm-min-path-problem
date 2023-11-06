@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
     }
 
     // scatter matrix to processes
-    MPI_Scatter(reoordered_matrix, matrix_size * matrix_size / nproc, MPI_INT, matrix_part, matrix_size * matrix_size / nproc, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Scatter(reoordered_matrix, matrix_size * matrix_size / nproc, MPI_INT, matrix_part, matrix_size * matrix_size / nproc, MPI_INT, 0, grid_comm);
     free(reoordered_matrix);
 
     // print matrix
