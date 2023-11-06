@@ -108,8 +108,6 @@ int main(int argc, char *argv[])
     int my_row = grid_coords[0];
     int my_col = grid_coords[1];
 
-    // create matrix
-    int *matrix = (int *)malloc(matrix_size * matrix_size * sizeof(int));
     int matrix_part[matrix_size / m][matrix_size / m];
 
     int blck_size = matrix_size / m;
