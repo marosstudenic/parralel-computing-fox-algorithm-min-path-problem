@@ -109,3 +109,5 @@ biggest issue for us was to print output to console from lab machine.
 and now i found out that is giving wrong output for 9 processes there must be some fault in running with 9 processes and 16, it is only working for 4 processes. 
 
 #### performance
+
+we have also created file to compare how fast it is agains sequential progam... there is floyd-warshal.c
