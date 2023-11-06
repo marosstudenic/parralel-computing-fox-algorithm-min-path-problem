@@ -23,19 +23,19 @@ void print_matrix_stdout(int rank, int matrix_size, int matrix[matrix_size][matr
 
 int main(int argc, char *argv[])
 {
-    int my_rank, size;
+    int my_rank, nproc;
     int m;           // sqrt of number of processes
     int matrix_size; // size of matrix
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
     // calculate m
-    m = (int)sqrt(size);
+    m = (int)sqrt(nproc);
 
     // check number of processes
-    if (m * m != size)
+    if (m * m != nproc)
     {
         printf("Number of processes must be a square number!\n");
         MPI_Finalize();
@@ -85,10 +85,34 @@ int main(int argc, char *argv[])
                 scanf("%d", &matrix[i][j]);
             }
         }
-
-        print_matrix(my_rank, matrix_size, matrix, 1);
-        print_matrix(my_rank, matrix_size, matrix, 0);
     }
+
+    // reorder matrix
+    if (my_rank == 0)
+    {
+        int matrix_reordered[matrix_size][matrix_size];
+        for (int i = 0; i < matrix_size; i++)
+        {
+            for (int j = 0; j < matrix_size; j++)
+            {
+                matrix_reordered[i][j] = matrix[(i + my_rank / m) % matrix_size][(j + my_rank % m) % matrix_size];
+            }
+        }
+        // copy reordered matrix to original matrix
+        for (int i = 0; i < matrix_size; i++)
+        {
+            for (int j = 0; j < matrix_size; j++)
+            {
+                matrix[i][j] = matrix_reordered[i][j];
+            }
+        }
+    }
+
+    // scatter matrix to processes
+    MPI_Scatter(matrix, matrix_size * matrix_size / nproc, MPI_INT, matrix_part, matrix_size * matrix_size / nproc, MPI_INT, 0, MPI_COMM_WORLD);
+
+    // print matrix
+    print_matrix(my_rank, matrix_size / m, matrix_part, 1);
 
     MPI_Finalize();
 }
