@@ -112,18 +112,6 @@ int main(int argc, char *argv[])
     int *matrix = (int *)malloc(matrix_size * matrix_size * sizeof(int));
     int matrix_part[matrix_size / m][matrix_size / m];
 
-    // read matrix from input
-    if (my_rank == 0)
-    {
-        for (int i = 0; i < matrix_size; i++)
-        {
-            for (int j = 0; j < matrix_size; j++)
-            {
-                scanf("%d", &matrix[i * matrix_size + j]);
-            }
-        }
-    }
-
     int blck_size = matrix_size / m;
 
     int *reoordered_matrix = (int *)malloc(matrix_size * matrix_size * sizeof(int));
@@ -146,7 +134,7 @@ int main(int argc, char *argv[])
 
                 int index_in_array = block_i * blck_size * blck_size + index_in_block;
                 int tmp;
-                tmp = matrix[row_i * matrix_size + col_i];
+                scanf("%d", &tmp);
 
                 // we need to replace all 0 with infinity, except diagonal, because there is no edge between there
                 if (tmp == 0 && row_i != col_i)
