@@ -31,6 +31,7 @@ void print_matrix_stdout(int rank, int matrix_size, int *matrix);
 void row_broadcast(int blck_size, int *matrixA, int *new_matrix, int step, int my_row, int my_rank, int m, MPI_Comm row_comm);
 void compute_min_plus(int blck_size, int *matrixA, int *matrixB, int *solution_matrix);
 void circular_column_shift(int blck_size, int *matrix, int my_row, int steps, int m, MPI_Comm col_comm);
+void reorder_matrix(int *solution_matrix, int *solution_matrix_wrong_order, int m, int blck_size, int matrix_size);
 
 int inf_sum(int a, int b)
 {
@@ -285,31 +286,9 @@ int main(int argc, char *argv[])
     if (my_rank == 0)
     {
         int *solution_matrix = (int *)malloc(matrix_size * matrix_size * sizeof(int));
-
-        for (int proc_row_i = 0; proc_row_i < m; proc_row_i++)
-        {
-            for (int proc_col_i = 0; proc_col_i < m; proc_col_i++)
-            {
-                for (int block_row_i = 0; block_row_i < blck_size; block_row_i++)
-                {
-                    for (int block_col_i = 0; block_col_i < blck_size; block_col_i++)
-                    {
-                        int index_in_block = block_row_i * blck_size + block_col_i;
-                        int index_in_array = (proc_row_i * m + proc_col_i) * blck_size * blck_size + index_in_block;
-                        int row = proc_row_i * blck_size + block_row_i;
-                        int col = proc_col_i * blck_size + block_col_i;
-                        solution_matrix[row * matrix_size + col] = solution_matrix_wrong_order[index_in_array];
-                    }
-                }
-            }
-        }
+        reorder_matrix(solution_matrix, solution_matrix_wrong_order, m, blck_size, matrix_size);
         print_matrix(my_rank, matrix_size, solution_matrix, STDOUT_PRINT);
         free(solution_matrix);
-    }
-
-    if (VERBOSE)
-    {
-        printf("rank: %d\n", my_rank);
     }
 
     MPI_Finalize();
@@ -414,6 +393,27 @@ void compute_min_plus(int blck_size, int *matrixA, int *matrixB, int *solution_m
             for (int index = 0; index < blck_size; index++)
             {
                 solution_matrix[row_i * blck_size + col_i] = min(solution_matrix[row_i * blck_size + col_i], inf_sum(matrixA[row_i * blck_size + index], matrixB[index * blck_size + col_i]));
+            }
+        }
+    }
+}
+
+void reorder_matrix(int *solution_matrix, int *solution_matrix_wrong_order, int m, int blck_size, int matrix_size)
+{
+    for (int proc_row_i = 0; proc_row_i < m; proc_row_i++)
+    {
+        for (int proc_col_i = 0; proc_col_i < m; proc_col_i++)
+        {
+            for (int block_row_i = 0; block_row_i < blck_size; block_row_i++)
+            {
+                for (int block_col_i = 0; block_col_i < blck_size; block_col_i++)
+                {
+                    int index_in_block = block_row_i * blck_size + block_col_i;
+                    int index_in_array = (proc_row_i * m + proc_col_i) * blck_size * blck_size + index_in_block;
+                    int row = proc_row_i * blck_size + block_row_i;
+                    int col = proc_col_i * blck_size + block_col_i;
+                    solution_matrix[row * matrix_size + col] = solution_matrix_wrong_order[index_in_array];
+                }
             }
         }
     }
