@@ -39,5 +39,6 @@ plt.legend()
 plt.grid(True, which="both", ls="--")
 
 # Show plot
-plt.savefig('performance-table-pic.png')
+# plt.savefig('performance-table-pic.png')
+plt.show()
 
