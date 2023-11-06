@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
     MPI_Scatter(reoordered_matrix, matrix_size * matrix_size / nproc, MPI_INT, matrix_part, matrix_size * matrix_size / nproc, MPI_INT, 0, MPI_COMM_WORLD);
 
     // print matrix
-    print_matrix(my_rank, matrix_size / m, matrix_part, CUSTOM_PRINT);
+    // print_matrix(my_rank, matrix_size / m, matrix_part, CUSTOM_PRINT);
 
     int matrixA[blck_size][blck_size];
     int matrixB[blck_size][blck_size];
@@ -184,37 +184,37 @@ int main(int argc, char *argv[])
     {
         for (int step = 0; step < m; step++)
         {
-            custom_print(my_rank, "step: %d\n", step);
-            custom_print(my_rank, "matrixA:\n");
-            print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
+            // custom_print(my_rank, "step: %d\n", step);
+            // custom_print(my_rank, "matrixA:\n");
+            // print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
 
-            custom_print(my_rank, "matrixB:\n");
-            print_matrix(my_rank, blck_size, matrixB, CUSTOM_PRINT);
+            // custom_print(my_rank, "matrixB:\n");
+            // print_matrix(my_rank, blck_size, matrixB, CUSTOM_PRINT);
 
-            custom_print(my_rank, "partial_solution:\n");
-            print_matrix(my_rank, blck_size, matrix_partial_solution, CUSTOM_PRINT);
+            // custom_print(my_rank, "partial_solution:\n");
+            // print_matrix(my_rank, blck_size, matrix_partial_solution, CUSTOM_PRINT);
 
             row_broadcast(blck_size, matrixA, temp_matrix, step, my_row, my_rank, m, row_comm);
 
-            custom_print(my_rank, "temp_matrix:\n");
-            print_matrix(my_rank, blck_size, temp_matrix, CUSTOM_PRINT);
+            // custom_print(my_rank, "temp_matrix:\n");
+            // print_matrix(my_rank, blck_size, temp_matrix, CUSTOM_PRINT);
 
             compute_min_plus(blck_size, temp_matrix, matrixB, matrix_partial_solution);
 
-            custom_print(my_rank, "after min plus: %d\n", step);
+            // custom_print(my_rank, "after min plus: %d\n", step);
 
-            custom_print(my_rank, "step: %d\n", step);
-            custom_print(my_rank, "matrixA:\n");
-            print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
+            // custom_print(my_rank, "step: %d\n", step);
+            // custom_print(my_rank, "matrixA:\n");
+            // print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
 
-            custom_print(my_rank, "matrixB:\n");
-            print_matrix(my_rank, blck_size, matrixB, CUSTOM_PRINT);
+            // custom_print(my_rank, "matrixB:\n");
+            // print_matrix(my_rank, blck_size, matrixB, CUSTOM_PRINT);
 
-            custom_print(my_rank, "temp_matrix:\n");
-            print_matrix(my_rank, blck_size, temp_matrix, CUSTOM_PRINT);
+            // custom_print(my_rank, "temp_matrix:\n");
+            // print_matrix(my_rank, blck_size, temp_matrix, CUSTOM_PRINT);
 
-            custom_print(my_rank, "partial_solution:\n");
-            print_matrix(my_rank, blck_size, matrix_partial_solution, CUSTOM_PRINT);
+            // custom_print(my_rank, "partial_solution:\n");
+            // print_matrix(my_rank, blck_size, matrix_partial_solution, CUSTOM_PRINT);
 
             circular_column_shift(blck_size, matrixB, my_row, step, m, col_comm);
         }
@@ -240,12 +240,49 @@ int main(int argc, char *argv[])
     }
 
     // solution is now in matrixA because we copied it
+    for (int row = 0; row < blck_size; row++)
+    {
+        for (int col = 0; col < blck_size; col++)
+        {
+            if (matrixA[row][col] == MY_INFINITY)
+            {
+                matrixA[row][col] = 0;
+            }
+        }
+    }
+
     print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
 
     // we need to replace all infinity with 0
     // we need to reorder it and gather in rank 0 process
 
-    // MPI_Gather(matrixA, info->count_of_elements_in_block, MPI_INT, solution_matrix, info->count_of_elements_in_block, MPI_INT, 0, MPI_COMM_WORLD);
+    int solution_matrix_wrong_order[m * blck_size * blck_size];
+
+    MPI_Gather(matrixA, blck_size * blck_size, MPI_INT, solution_matrix_wrong_order, blck_size * blck_size, MPI_INT, 0, MPI_COMM_WORLD);
+
+    if (my_rank == 0)
+    {
+        int solution_matrix[matrix_size][matrix_size];
+
+        for (int proc_row_i = 0; proc_row_i < m; proc_row_i++)
+        {
+            for (int proc_col_i = 0; proc_col_i < m; proc_col_i++)
+            {
+                for (int block_row_i = 0; block_row_i < blck_size; block_row_i++)
+                {
+                    for (int block_col_i = 0; block_col_i < blck_size; block_col_i++)
+                    {
+                        int index_in_block = block_row_i * blck_size + block_col_i;
+                        int index_in_array = (proc_row_i * m + proc_col_i) * blck_size * blck_size + index_in_block;
+                        int row = proc_row_i * blck_size + block_row_i;
+                        int col = proc_col_i * blck_size + block_col_i;
+                        solution_matrix[row][col] = solution_matrix_wrong_order[index_in_array];
+                    }
+                }
+            }
+        }
+        print_matrix(my_rank, matrix_size, solution_matrix, STDOUT_PRINT);
+    }
 
     MPI_Finalize();
 
