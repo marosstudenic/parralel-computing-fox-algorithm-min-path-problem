@@ -17,6 +17,9 @@
 // 5. print result matrix
 
 void custom_print(int rank, const char *format, ...);
+void print_matrix(int rank, int matrix_size, int matrix[matrix_size][matrix_size], int is_custom_print);
+void print_matrix_custom(int rank, int matrix_size, int matrix[matrix_size][matrix_size]);
+void print_matrix_stdout(int rank, int matrix_size, int matrix[matrix_size][matrix_size]);
 
 int main(int argc, char *argv[])
 {
@@ -58,7 +61,8 @@ int main(int argc, char *argv[])
     // create grid communicator
     MPI_Comm grid_comm;
     int dims[2] = {m, m};
-    int periods[2] = {0, 0};
+    // we want periodic boundaries of columns
+    int periods[2] = {0, 1};
     MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 0, &grid_comm);
 
     // create row and column communicators
@@ -66,6 +70,25 @@ int main(int argc, char *argv[])
     MPI_Comm col_comm;
     MPI_Comm_split(grid_comm, my_rank / m, my_rank % m, &row_comm);
     MPI_Comm_split(grid_comm, my_rank % m, my_rank / m, &col_comm);
+
+    // create matrix
+    int matrix[matrix_size][matrix_size];
+    int matrix_part[matrix_size / m][matrix_size / m];
+
+    // read matrix from input
+    if (my_rank == 0)
+    {
+        for (int i = 0; i < matrix_size; i++)
+        {
+            for (int j = 0; j < matrix_size; j++)
+            {
+                scanf("%d", &matrix[i][j]);
+            }
+        }
+
+        print_matrix(my_rank, matrix_size, matrix, 1);
+        print_matrix(my_rank, matrix_size, matrix, 0);
+    }
 
     MPI_Finalize();
 }
@@ -95,4 +118,40 @@ void custom_print(int rank, const char *format, ...)
 
     // Close the file
     fclose(file);
+}
+
+void print_matrix(int rank, int matrix_size, int matrix[matrix_size][matrix_size], int is_custom_print)
+{
+    if (is_custom_print)
+    {
+        print_matrix_custom(rank, matrix_size, matrix);
+    }
+    else
+    {
+        print_matrix_stdout(rank, matrix_size, matrix);
+    }
+}
+
+void print_matrix_custom(int rank, int matrix_size, int matrix[matrix_size][matrix_size])
+{
+    for (int i = 0; i < matrix_size; i++)
+    {
+        for (int j = 0; j < matrix_size; j++)
+        {
+            custom_print(rank, "%d ", matrix[i][j]);
+        }
+        custom_print(rank, "\n");
+    }
+}
+
+void print_matrix_stdout(int rank, int matrix_size, int matrix[matrix_size][matrix_size])
+{
+    for (int i = 0; i < matrix_size; i++)
+    {
+        for (int j = 0; j < matrix_size; j++)
+        {
+            printf("%d ", matrix[i][j]);
+        }
+        printf("\n");
+    }
 }
