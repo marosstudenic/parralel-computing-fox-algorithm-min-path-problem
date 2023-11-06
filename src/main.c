@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define CUSTOM_PRINT 1
 #define STDOUT_PRINT 0
@@ -23,9 +24,9 @@
 // 5. print result matrix
 
 void custom_print(int rank, const char *format, ...);
-void print_matrix(int rank, int matrix_size, int matrix[matrix_size][matrix_size], int is_custom_print);
-void print_matrix_custom(int rank, int matrix_size, int matrix[matrix_size][matrix_size]);
-void print_matrix_stdout(int rank, int matrix_size, int matrix[matrix_size][matrix_size]);
+void print_matrix(int rank, int matrix_size, int *matrix, int is_custom_print);
+void print_matrix_custom(int rank, int matrix_size, int *matrix);
+void print_matrix_stdout(int rank, int matrix_size, int *matrix);
 void row_broadcast(int blck_size, int matrixA[blck_size][blck_size], int new_matrix[blck_size][blck_size], int step, int my_row, int my_rank, int m, MPI_Comm row_comm);
 void compute_min_plus(int blck_size, int matrixA[blck_size][blck_size], int matrixB[blck_size][blck_size], int solution_matrix[blck_size][blck_size]);
 void circular_column_shift(int blck_size, int matrix[blck_size][blck_size], int my_row, int steps, int m, MPI_Comm col_comm);
@@ -247,7 +248,7 @@ int main(int argc, char *argv[])
 
     if (my_rank == 0)
     {
-        int solution_matrix[matrix_size][matrix_size];
+        int *solution_matrix = (int *)malloc(matrix_size * matrix_size * sizeof(int));
 
         for (int proc_row_i = 0; proc_row_i < m; proc_row_i++)
         {
@@ -261,7 +262,7 @@ int main(int argc, char *argv[])
                         int index_in_array = (proc_row_i * m + proc_col_i) * blck_size * blck_size + index_in_block;
                         int row = proc_row_i * blck_size + block_row_i;
                         int col = proc_col_i * blck_size + block_col_i;
-                        solution_matrix[row][col] = solution_matrix_wrong_order[index_in_array];
+                        solution_matrix[row * matrix_size + col] = solution_matrix_wrong_order[index_in_array];
                     }
                 }
             }
@@ -312,7 +313,7 @@ void custom_print(int rank, const char *format, ...)
     fclose(file);
 }
 
-void print_matrix(int rank, int matrix_size, int matrix[matrix_size][matrix_size], int is_custom_print)
+void print_matrix(int rank, int matrix_size, int *matrix, int is_custom_print)
 {
     if (is_custom_print)
     {
@@ -324,13 +325,13 @@ void print_matrix(int rank, int matrix_size, int matrix[matrix_size][matrix_size
     }
 }
 
-void print_matrix_custom(int rank, int matrix_size, int matrix[matrix_size][matrix_size])
+void print_matrix_custom(int rank, int matrix_size, int *matrix)
 {
     for (int i = 0; i < matrix_size; i++)
     {
         for (int j = 0; j < matrix_size; j++)
         {
-            custom_print(rank, "%d", matrix[i][j]);
+            custom_print(rank, "%d", matrix[i * matrix_size + j]);
             if (j != matrix_size - 1)
             {
                 custom_print(rank, " ");
@@ -340,13 +341,13 @@ void print_matrix_custom(int rank, int matrix_size, int matrix[matrix_size][matr
     }
 }
 
-void print_matrix_stdout(int rank, int matrix_size, int matrix[matrix_size][matrix_size])
+void print_matrix_stdout(int rank, int matrix_size, int *matrix)
 {
     for (int i = 0; i < matrix_size; i++)
     {
         for (int j = 0; j < matrix_size; j++)
         {
-            printf("%d", matrix[i][j]);
+            printf("%d", matrix[i * matrix_size + j]);
             if (j != matrix_size - 1)
             {
                 printf(" ");
