@@ -66,12 +66,15 @@ int main(int argc, char *argv[])
     // calculate m
     m = (int)sqrt(nproc);
 
-    // check number of processes
-    if (m * m != nproc)
+    if (my_rank == 0)
     {
-        printf("Number of processes must be a square number!\n");
-        MPI_Finalize();
-        return 1;
+        // check number of processes
+        if (m * m != nproc)
+        {
+            printf("Number of processes must be a square number!\n");
+            MPI_Abort(MPI_COMM_WORLD, 1);
+            return 1;
+        }
     }
 
     if (my_rank == 0)
@@ -240,7 +243,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
+    // print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
 
     // we need to replace all infinity with 0
     // we need to reorder it and gather in rank 0 process
@@ -273,7 +276,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        print_matrix(my_rank, matrix_size, solution_matrix, STDOUT_PRINT);
+        print_matrix(my_rank, matrix_size, solution_matrix, CUSTOM_PRINT);
         free(solution_matrix);
     }
 
