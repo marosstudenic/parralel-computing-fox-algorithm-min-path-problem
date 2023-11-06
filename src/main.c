@@ -56,18 +56,18 @@ int min(int a, int b)
 
 int main(int argc, char *argv[])
 {
-    int my_rank, nproc;
+    int my_rank, nproc, old_rank;
     int m;           // sqrt of number of processes
     int matrix_size; // size of matrix
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    MPI_Comm_rank(MPI_COMM_WORLD, &old_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
     // calculate m
     m = (int)sqrt(nproc);
 
-    if (my_rank == 0)
+    if (old_rank == 0)
     {
         // check number of processes
         if (m * m != nproc)
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (my_rank == 0)
+    if (old_rank == 0)
     {
         scanf("%d", &matrix_size);
     }
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     // check if matrix size is divisible by m
     if (matrix_size % m != 0)
     {
-        printf("Matrix size must be divisible by sqrt(number of processes)!, %d\n", my_rank);
+        printf("Matrix size must be divisible by sqrt(number of processes)!, %d\n", old_rank);
         MPI_Finalize();
         return 1;
     }
@@ -98,14 +98,10 @@ int main(int argc, char *argv[])
     MPI_Comm grid_comm;
     int dims[2] = {m, m};
     // we want periodic boundaries of columns
-    int periods[2] = {0, 1};
-    MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 0, &grid_comm);
+    int periods[2] = {1, 1};
+    MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 1, &grid_comm);
+    MPI_Comm_rank(grid_comm, &my_rank);
 
-    // create row and column communicators
-    MPI_Comm row_comm;
-    MPI_Comm col_comm;
-    MPI_Comm_split(grid_comm, my_rank / m, my_rank % m, &row_comm);
-    MPI_Comm_split(grid_comm, my_rank % m, my_rank / m, &col_comm);
 
     // save coords
     int grid_coords[2];
@@ -113,13 +109,29 @@ int main(int argc, char *argv[])
     int my_row = grid_coords[0];
     int my_col = grid_coords[1];
 
+
+    MPI_Comm row_comm;
+    MPI_Comm col_comm;
+    int row_communicator[2] = {0, 1 };
+    MPI_Cart_sub(grid_comm, row_communicator, &row_comm);
+
+    int col_communicator[2] = { 1, 0};
+     MPI_Cart_sub(grid_comm, col_communicator, 
+	       &col_comm);
+
+    // // create row and column communicators
+    // MPI_Comm row_comm;
+    // MPI_Comm col_comm;
+    // MPI_Comm_split(grid_comm, my_rank / m, my_rank % m, &row_comm);
+    // MPI_Comm_split(grid_comm, my_rank % m, my_rank / m, &col_comm);
+
     int blck_size = matrix_size / m;
 
     int *matrix_part = (int *)malloc(blck_size * blck_size * sizeof(int));
     int *reoordered_matrix = (int *)malloc(matrix_size * matrix_size * sizeof(int));
 
     // reorder matrix
-    if (my_rank == 0)
+    if (old_rank == 0)
     {
 
         for (int row_i = 0; row_i < matrix_size; row_i++)
@@ -260,6 +272,15 @@ int main(int argc, char *argv[])
     // we need to reorder it and gather in rank 0 process
 
     int *solution_matrix_wrong_order = (int *)malloc(matrix_size * matrix_size * sizeof(int));
+
+    
+    for (i = 0; i < m; i++) // rearrange the entries in each row of grid processes
+    {
+        MPI_Gather(matrixA, blck_size, MPI_INT, solution_matrix_wrong_order + i * blck_size * blck_size, blck_size * blck_size, MPI_INT, 0, row_comm);
+    }
+
+    // gather the ordered entries from first column to the grid prosses in proc.0
+    MPI_Gather(buff, ma_bar * nb, MPI_FLOAT, res, ma_bar * nb, MPI_FLOAT, 0, grid->col_comm);
 
     MPI_Gather(matrixA, blck_size * blck_size, MPI_INT, solution_matrix_wrong_order, blck_size * blck_size, MPI_INT, 0, MPI_COMM_WORLD); 
 
