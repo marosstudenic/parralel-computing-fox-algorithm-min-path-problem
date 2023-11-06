@@ -108,9 +108,9 @@ int main(int argc, char *argv[])
     int my_row = grid_coords[0];
     int my_col = grid_coords[1];
 
-    int matrix_part[matrix_size / m][matrix_size / m];
-
     int blck_size = matrix_size / m;
+
+    int *matrix_part = (int *)malloc(blck_size * blck_size * sizeof(int));
 
     int *reoordered_matrix = (int *)malloc(matrix_size * matrix_size * sizeof(int));
 
@@ -158,8 +158,8 @@ int main(int argc, char *argv[])
     {
         for (int col_i = 0; col_i < blck_size; col_i++)
         {
-            matrixA[row_i][col_i] = matrix_part[row_i][col_i];
-            matrixB[row_i][col_i] = matrix_part[row_i][col_i];
+            matrixA[row_i][col_i] = matrix_part[row_i * blck_size + col_i];
+            matrixB[row_i][col_i] = matrix_part[row_i * blck_size + col_i];
             matrix_partial_solution[row_i][col_i] = MY_INFINITY;
         }
     }
