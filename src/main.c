@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 
     int blck_size = matrix_size / m;
 
-    int reoordered_matrix[matrix_size * matrix_size];
+    int *reoordered_matrix = (int *)malloc(matrix_size * matrix_size * sizeof(int));
 
     // reorder matrix
     if (my_rank == 0)
