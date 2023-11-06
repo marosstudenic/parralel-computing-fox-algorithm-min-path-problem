@@ -64,6 +64,11 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &old_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
+    if (VERBOSE)
+    {
+        printf("starting %d\n", old_rank);
+    }
+
     // calculate m
     m = (int)sqrt(nproc);
 
@@ -102,22 +107,20 @@ int main(int argc, char *argv[])
     MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 1, &grid_comm);
     MPI_Comm_rank(grid_comm, &my_rank);
 
-
     // save coords
     int grid_coords[2];
     MPI_Cart_coords(grid_comm, my_rank, DIM, grid_coords);
     int my_row = grid_coords[0];
     int my_col = grid_coords[1];
 
-
     MPI_Comm row_comm;
     MPI_Comm col_comm;
-    int row_communicator[2] = {0, 1 };
+    int row_communicator[2] = {0, 1};
     MPI_Cart_sub(grid_comm, row_communicator, &row_comm);
 
-    int col_communicator[2] = { 1, 0};
-     MPI_Cart_sub(grid_comm, col_communicator, 
-	       &col_comm);
+    int col_communicator[2] = {1, 0};
+    MPI_Cart_sub(grid_comm, col_communicator,
+                 &col_comm);
 
     // // create row and column communicators
     // MPI_Comm row_comm;
@@ -273,16 +276,7 @@ int main(int argc, char *argv[])
 
     int *solution_matrix_wrong_order = (int *)malloc(matrix_size * matrix_size * sizeof(int));
 
-    
-    for (i = 0; i < m; i++) // rearrange the entries in each row of grid processes
-    {
-        MPI_Gather(matrixA, blck_size, MPI_INT, solution_matrix_wrong_order + i * blck_size * blck_size, blck_size * blck_size, MPI_INT, 0, row_comm);
-    }
-
-    // gather the ordered entries from first column to the grid prosses in proc.0
-    MPI_Gather(buff, ma_bar * nb, MPI_FLOAT, res, ma_bar * nb, MPI_FLOAT, 0, grid->col_comm);
-
-    MPI_Gather(matrixA, blck_size * blck_size, MPI_INT, solution_matrix_wrong_order, blck_size * blck_size, MPI_INT, 0, MPI_COMM_WORLD); 
+    MPI_Gather(matrixA, blck_size * blck_size, MPI_INT, solution_matrix_wrong_order, blck_size * blck_size, MPI_INT, 0, grid_comm);
 
     free(matrixA);
     free(matrixB);
@@ -313,12 +307,12 @@ int main(int argc, char *argv[])
         free(solution_matrix);
     }
 
-    if (VERBOSE) {
+    if (VERBOSE)
+    {
         printf("rank: %d\n", my_rank);
     }
 
     MPI_Finalize();
-
 }
 
 // print function which prints output to file based on rank
