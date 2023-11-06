@@ -28,7 +28,7 @@ void print_matrix(int rank, int matrix_size, int *matrix, int is_custom_print);
 void print_matrix_custom(int rank, int matrix_size, int *matrix);
 void print_matrix_stdout(int rank, int matrix_size, int *matrix);
 void row_broadcast(int blck_size, int matrixA[blck_size][blck_size], int new_matrix[blck_size][blck_size], int step, int my_row, int my_rank, int m, MPI_Comm row_comm);
-void compute_min_plus(int blck_size, int matrixA[blck_size][blck_size], int matrixB[blck_size][blck_size], int solution_matrix[blck_size][blck_size]);
+void compute_min_plus(int blck_size, int *matrixA, int *matrixB, int *solution_matrix);
 void circular_column_shift(int blck_size, int matrix[blck_size][blck_size], int my_row, int steps, int m, MPI_Comm col_comm);
 
 int inf_sum(int a, int b)
@@ -149,18 +149,18 @@ int main(int argc, char *argv[])
     // print matrix
     // print_matrix(my_rank, matrix_size / m, matrix_part, CUSTOM_PRINT);
 
-    int matrixA[blck_size][blck_size];
-    int matrixB[blck_size][blck_size];
-    int matrix_partial_solution[blck_size][blck_size];
-    int temp_matrix[blck_size][blck_size];
+    int *matrixA = (int *)malloc(blck_size * blck_size * sizeof(int));
+    int *matrixB = (int *)malloc(blck_size * blck_size * sizeof(int));
+    int *matrix_partial_solution = (int *)malloc(blck_size * blck_size * sizeof(int));
+    int *temp_matrix = (int *)malloc(blck_size * blck_size * sizeof(int));
 
     for (int row_i = 0; row_i < blck_size; row_i++)
     {
         for (int col_i = 0; col_i < blck_size; col_i++)
         {
-            matrixA[row_i][col_i] = matrix_part[row_i * blck_size + col_i];
-            matrixB[row_i][col_i] = matrix_part[row_i * blck_size + col_i];
-            matrix_partial_solution[row_i][col_i] = MY_INFINITY;
+            matrixA[row_i * blck_size + col_i] = matrix_part[row_i * blck_size + col_i];
+            matrixB[row_i * blck_size + col_i] = matrix_part[row_i * blck_size + col_i];
+            matrix_partial_solution[row_i * blck_size + col_i] = MY_INFINITY;
         }
     }
 
@@ -209,9 +209,9 @@ int main(int argc, char *argv[])
         {
             for (int col = 0; col < blck_size; col++)
             {
-                matrixA[row][col] = matrix_partial_solution[row][col];
-                matrixB[row][col] = matrix_partial_solution[row][col];
-                matrix_partial_solution[row][col] = MY_INFINITY;
+                matrixA[row * blck_size + col] = matrix_partial_solution[row * blck_size + col];
+                matrixB[row * blck_size + col] = matrix_partial_solution[row * blck_size + col];
+                matrix_partial_solution[row * blck_size + col] = MY_INFINITY;
             }
         }
 
@@ -230,9 +230,9 @@ int main(int argc, char *argv[])
     {
         for (int col = 0; col < blck_size; col++)
         {
-            if (matrixA[row][col] == MY_INFINITY)
+            if (matrixA[row * blck_size + col] == MY_INFINITY)
             {
-                matrixA[row][col] = 0;
+                matrixA[row * blck_size + col] = 0;
             }
         }
     }
@@ -376,7 +376,7 @@ void row_broadcast(int blck_size, int matrixA[blck_size][blck_size], int new_mat
     MPI_Bcast(new_matrix, blck_size * blck_size, MPI_INT, root, row_comm);
 }
 
-void compute_min_plus(int blck_size, int matrixA[blck_size][blck_size], int matrixB[blck_size][blck_size], int solution_matrix[blck_size][blck_size])
+void compute_min_plus(int blck_size, int *matrixA, int *matrixB, int *solution_matrix)
 {
     for (int row_i = 0; row_i < blck_size; row_i++)
     {
@@ -384,7 +384,7 @@ void compute_min_plus(int blck_size, int matrixA[blck_size][blck_size], int matr
         {
             for (int index = 0; index < blck_size; index++)
             {
-                solution_matrix[row_i][col_i] = min(solution_matrix[row_i][col_i], inf_sum(matrixA[row_i][index], matrixB[index][col_i]));
+                solution_matrix[row_i * blck_size + col_i] = min(solution_matrix[row_i * blck_size + col_i], inf_sum(matrixA[row_i * blck_size + index], matrixB[index * blck_size + col_i]));
             }
         }
     }
