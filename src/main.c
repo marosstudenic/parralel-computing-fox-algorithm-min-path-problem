@@ -32,6 +32,7 @@ void row_broadcast(int blck_size, int *matrixA, int *new_matrix, int step, int m
 void compute_min_plus(int blck_size, int *matrixA, int *matrixB, int *solution_matrix);
 void circular_column_shift(int blck_size, int *matrix, int my_row, int steps, int m, MPI_Comm col_comm);
 void reorder_matrix(int *solution_matrix, int *solution_matrix_wrong_order, int m, int blck_size, int matrix_size);
+void read_matrix(int matrix_size, int blck_size, int m, int *reoordered_matrix);
 
 int inf_sum(int a, int b)
 {
@@ -95,13 +96,16 @@ int main(int argc, char *argv[])
     // check if matrix size is divisible by m
     if (matrix_size % m != 0)
     {
-        printf("Matrix size must be divisible by sqrt(number of processes)!, %d\n", old_rank);
+        printf("Matrix size must be divisible by sqrt(number of processes)!\n");
         MPI_Finalize();
         return 1;
     }
 
     // create grid communicator
     MPI_Comm grid_comm;
+    MPI_Comm row_comm;
+    MPI_Comm col_comm;
+
     int dims[2] = {m, m};
     // we want periodic boundaries of columns
     int periods[2] = {1, 1};
@@ -113,9 +117,6 @@ int main(int argc, char *argv[])
     MPI_Cart_coords(grid_comm, my_rank, DIM, grid_coords);
     int my_row = grid_coords[0];
     int my_col = grid_coords[1];
-
-    MPI_Comm row_comm;
-    MPI_Comm col_comm;
     int row_communicator[2] = {0, 1};
     MPI_Cart_sub(grid_comm, row_communicator, &row_comm);
 
@@ -123,57 +124,71 @@ int main(int argc, char *argv[])
     MPI_Cart_sub(grid_comm, col_communicator,
                  &col_comm);
 
-    // // create row and column communicators
-    // MPI_Comm row_comm;
-    // MPI_Comm col_comm;
-    // MPI_Comm_split(grid_comm, my_rank / m, my_rank % m, &row_comm);
-    // MPI_Comm_split(grid_comm, my_rank % m, my_rank / m, &col_comm);
-
     int blck_size = matrix_size / m;
-
     int *matrix_part = (int *)malloc(blck_size * blck_size * sizeof(int));
     int *reoordered_matrix = (int *)malloc(matrix_size * matrix_size * sizeof(int));
+
+    if (matrix_part == NULL)
+    {
+        printf("malloc error in proc: %d", my_rank);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    if (reoordered_matrix == NULL)
+    {
+        printf("malloc error in proc: %d", my_rank);
+        free(matrix_part);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
 
     // reorder matrix
     if (old_rank == 0)
     {
-
-        for (int row_i = 0; row_i < matrix_size; row_i++)
-        {
-            for (int col_i = 0; col_i < matrix_size; col_i++)
-            {
-                int block_row_i = row_i / blck_size;
-                int block_col_i = col_i / blck_size;
-                int block_i = block_row_i * m + block_col_i;
-
-                int col_i_in_block = col_i % blck_size;
-                int row_i_in_block = row_i % blck_size;
-                int index_in_block = row_i_in_block * blck_size + col_i_in_block;
-
-                int index_in_array = block_i * blck_size * blck_size + index_in_block;
-                int tmp;
-                scanf("%d", &tmp);
-
-                // we need to replace all 0 with infinity, except diagonal, because there is no edge between there
-                if (tmp == 0 && row_i != col_i)
-                    tmp = MY_INFINITY;
-
-                reoordered_matrix[index_in_array] = tmp;
-            }
-        }
+        read_matrix(matrix_size, blck_size, m, reoordered_matrix);
     }
 
     // scatter matrix to processes
     MPI_Scatter(reoordered_matrix, matrix_size * matrix_size / nproc, MPI_INT, matrix_part, matrix_size * matrix_size / nproc, MPI_INT, 0, grid_comm);
     free(reoordered_matrix);
 
-    // print matrix
-    // print_matrix(my_rank, matrix_size / m, matrix_part, CUSTOM_PRINT);
-
     int *matrixA = (int *)malloc(blck_size * blck_size * sizeof(int));
     int *matrixB = (int *)malloc(blck_size * blck_size * sizeof(int));
     int *matrix_partial_solution = (int *)malloc(blck_size * blck_size * sizeof(int));
     int *temp_matrix = (int *)malloc(blck_size * blck_size * sizeof(int));
+
+    if (matrixA == NULL)
+    {
+        printf("malloc error in proc: %d", my_rank);
+        free(matrix_part);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    if (matrixB == NULL)
+    {
+        printf("malloc error in proc: %d", my_rank);
+        free(matrixA);
+        free(matrix_part);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    if (matrix_partial_solution == NULL)
+    {
+        printf("malloc error in proc: %d", my_rank);
+        free(matrixB);
+        free(matrix_part);
+        free(matrixA);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    if (temp_matrix == NULL)
+    {
+        printf("malloc error in proc: %d", my_rank);
+        free(matrix_partial_solution);
+        free(matrixB);
+        free(matrix_part);
+        free(matrixA);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
 
     for (int row_i = 0; row_i < blck_size; row_i++)
     {
@@ -203,38 +218,8 @@ int main(int argc, char *argv[])
 
         for (int step = 0; step < m; step++)
         {
-            // custom_print(my_rank, "step: %d\n", step);
-            // custom_print(my_rank, "matrixA:\n");
-            // print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
-
-            // custom_print(my_rank, "matrixB:\n");
-            // print_matrix(my_rank, blck_size, matrixB, CUSTOM_PRINT);
-
-            // custom_print(my_rank, "partial_solution:\n");
-            // print_matrix(my_rank, blck_size, matrix_partial_solution, CUSTOM_PRINT);
-
             row_broadcast(blck_size, matrixA, temp_matrix, step, my_row, my_rank, m, row_comm);
-
-            // custom_print(my_rank, "temp_matrix:\n");
-            // print_matrix(my_rank, blck_size, temp_matrix, CUSTOM_PRINT);
-
             compute_min_plus(blck_size, temp_matrix, matrixB, matrix_partial_solution);
-
-            // custom_print(my_rank, "after min plus: %d\n", step);
-
-            // custom_print(my_rank, "step: %d\n", step);
-            // custom_print(my_rank, "matrixA:\n");
-            // print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
-
-            // custom_print(my_rank, "matrixB:\n");
-            // print_matrix(my_rank, blck_size, matrixB, CUSTOM_PRINT);
-
-            // custom_print(my_rank, "temp_matrix:\n");
-            // print_matrix(my_rank, blck_size, temp_matrix, CUSTOM_PRINT);
-
-            // custom_print(my_rank, "partial_solution:\n");
-            // print_matrix(my_rank, blck_size, matrix_partial_solution, CUSTOM_PRINT);
-
             circular_column_shift(blck_size, matrixB, my_row, step, m, col_comm);
         }
 
@@ -270,18 +255,26 @@ int main(int argc, char *argv[])
         }
     }
 
-    // print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
-
     // we need to replace all infinity with 0
     // we need to reorder it and gather in rank 0 process
-
     int *solution_matrix_wrong_order = (int *)malloc(matrix_size * matrix_size * sizeof(int));
+
+    if (temp_matrix == NULL)
+    {
+        printf("malloc error in proc: %d", my_rank);
+        free(matrix_partial_solution);
+        free(matrixB);
+        free(temp_matrix);
+        free(matrixA);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
 
     MPI_Gather(matrixA, blck_size * blck_size, MPI_INT, solution_matrix_wrong_order, blck_size * blck_size, MPI_INT, 0, grid_comm);
 
     free(matrixA);
     free(matrixB);
     free(matrix_partial_solution);
+    free(temp_matrix);
 
     if (my_rank == 0)
     {
@@ -415,6 +408,33 @@ void reorder_matrix(int *solution_matrix, int *solution_matrix_wrong_order, int 
                     solution_matrix[row * matrix_size + col] = solution_matrix_wrong_order[index_in_array];
                 }
             }
+        }
+    }
+}
+
+void read_matrix(int matrix_size, int blck_size, int m, int *reoordered_matrix)
+{
+    for (int row_i = 0; row_i < matrix_size; row_i++)
+    {
+        for (int col_i = 0; col_i < matrix_size; col_i++)
+        {
+            int block_row_i = row_i / blck_size;
+            int block_col_i = col_i / blck_size;
+            int block_i = block_row_i * m + block_col_i;
+
+            int col_i_in_block = col_i % blck_size;
+            int row_i_in_block = row_i % blck_size;
+            int index_in_block = row_i_in_block * blck_size + col_i_in_block;
+
+            int index_in_array = block_i * blck_size * blck_size + index_in_block;
+            int tmp;
+            scanf("%d", &tmp);
+
+            // we need to replace all 0 with infinity, except diagonal, because there is no edge between there
+            if (tmp == 0 && row_i != col_i)
+                tmp = MY_INFINITY;
+
+            reoordered_matrix[index_in_array] = tmp;
         }
     }
 }
