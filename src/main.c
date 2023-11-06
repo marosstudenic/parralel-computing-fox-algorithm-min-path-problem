@@ -27,9 +27,9 @@ void custom_print(int rank, const char *format, ...);
 void print_matrix(int rank, int matrix_size, int *matrix, int is_custom_print);
 void print_matrix_custom(int rank, int matrix_size, int *matrix);
 void print_matrix_stdout(int rank, int matrix_size, int *matrix);
-void row_broadcast(int blck_size, int matrixA[blck_size][blck_size], int new_matrix[blck_size][blck_size], int step, int my_row, int my_rank, int m, MPI_Comm row_comm);
+void row_broadcast(int blck_size, int *matrixA, int *new_matrix, int step, int my_row, int my_rank, int m, MPI_Comm row_comm);
 void compute_min_plus(int blck_size, int *matrixA, int *matrixB, int *solution_matrix);
-void circular_column_shift(int blck_size, int matrix[blck_size][blck_size], int my_row, int steps, int m, MPI_Comm col_comm);
+void circular_column_shift(int blck_size, int *matrix, int my_row, int steps, int m, MPI_Comm col_comm);
 
 int inf_sum(int a, int b)
 {
@@ -248,6 +248,9 @@ int main(int argc, char *argv[])
     int *solution_matrix_wrong_order = (int *)malloc(matrix_size * matrix_size * sizeof(int));
 
     MPI_Gather(matrixA, blck_size * blck_size, MPI_INT, solution_matrix_wrong_order, blck_size * blck_size, MPI_INT, 0, MPI_COMM_WORLD);
+    free(matrixA);
+    free(matrixB);
+    free(matrix_partial_solution);
 
     if (my_rank == 0)
     {
@@ -361,7 +364,7 @@ void print_matrix_stdout(int rank, int matrix_size, int *matrix)
     }
 }
 
-void circular_column_shift(int blck_size, int matrix[blck_size][blck_size], int my_row, int steps, int m, MPI_Comm col_comm)
+void circular_column_shift(int blck_size, int *matrix, int my_row, int steps, int m, MPI_Comm col_comm)
 {
     int source = (my_row - 1 + m) % m;
     int dest = (my_row + 1) % m;
@@ -369,7 +372,7 @@ void circular_column_shift(int blck_size, int matrix[blck_size][blck_size], int 
     MPI_Sendrecv_replace(matrix, blck_size * blck_size, MPI_INT, dest, 1, source, 1, col_comm, MPI_STATUS_IGNORE);
 }
 
-void row_broadcast(int blck_size, int matrixA[blck_size][blck_size], int new_matrix[blck_size][blck_size], int step, int my_row, int my_rank, int m, MPI_Comm row_comm)
+void row_broadcast(int blck_size, int *matrixA, int *new_matrix, int step, int my_row, int my_rank, int m, MPI_Comm row_comm)
 {
     if (my_rank == my_row * m + (my_row + step) % m)
     {
