@@ -178,44 +178,74 @@ int main(int argc, char *argv[])
         }
     }
 
-    int step = 0;
-    for (int step = 0; step < m; step++)
+    int traveled_distance = 0;
+
+    while (traveled_distance < matrix_size)
     {
-        custom_print(my_rank, "step: %d\n", step);
-        custom_print(my_rank, "matrixA:\n");
-        print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
+        for (int step = 0; step < m; step++)
+        {
+            custom_print(my_rank, "step: %d\n", step);
+            custom_print(my_rank, "matrixA:\n");
+            print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
 
-        custom_print(my_rank, "matrixB:\n");
-        print_matrix(my_rank, blck_size, matrixB, CUSTOM_PRINT);
+            custom_print(my_rank, "matrixB:\n");
+            print_matrix(my_rank, blck_size, matrixB, CUSTOM_PRINT);
 
-        custom_print(my_rank, "partial_solution:\n");
-        print_matrix(my_rank, blck_size, matrix_partial_solution, CUSTOM_PRINT);
+            custom_print(my_rank, "partial_solution:\n");
+            print_matrix(my_rank, blck_size, matrix_partial_solution, CUSTOM_PRINT);
 
-        row_broadcast(blck_size, matrixA, temp_matrix, step, my_row, my_rank, m, row_comm);
+            row_broadcast(blck_size, matrixA, temp_matrix, step, my_row, my_rank, m, row_comm);
 
-        custom_print(my_rank, "temp_matrix:\n");
-        print_matrix(my_rank, blck_size, temp_matrix, CUSTOM_PRINT);
+            custom_print(my_rank, "temp_matrix:\n");
+            print_matrix(my_rank, blck_size, temp_matrix, CUSTOM_PRINT);
 
-        compute_min_plus(blck_size, temp_matrix, matrixB, matrix_partial_solution);
+            compute_min_plus(blck_size, temp_matrix, matrixB, matrix_partial_solution);
 
-        custom_print(my_rank, "after min plus: %d\n", step);
+            custom_print(my_rank, "after min plus: %d\n", step);
 
-        custom_print(my_rank, "step: %d\n", step);
-        custom_print(my_rank, "matrixA:\n");
-        print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
+            custom_print(my_rank, "step: %d\n", step);
+            custom_print(my_rank, "matrixA:\n");
+            print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
 
-        custom_print(my_rank, "matrixB:\n");
-        print_matrix(my_rank, blck_size, matrixB, CUSTOM_PRINT);
+            custom_print(my_rank, "matrixB:\n");
+            print_matrix(my_rank, blck_size, matrixB, CUSTOM_PRINT);
 
-        custom_print(my_rank, "temp_matrix:\n");
-        print_matrix(my_rank, blck_size, temp_matrix, CUSTOM_PRINT);
+            custom_print(my_rank, "temp_matrix:\n");
+            print_matrix(my_rank, blck_size, temp_matrix, CUSTOM_PRINT);
 
-        custom_print(my_rank, "partial_solution:\n");
-        print_matrix(my_rank, blck_size, matrix_partial_solution, CUSTOM_PRINT);
+            custom_print(my_rank, "partial_solution:\n");
+            print_matrix(my_rank, blck_size, matrix_partial_solution, CUSTOM_PRINT);
 
-        circular_column_shift(blck_size, matrixB, my_row, step, m, col_comm);
+            circular_column_shift(blck_size, matrixB, my_row, step, m, col_comm);
+        }
+
+        for (int row = 0; row < blck_size; row++)
+        {
+            for (int col = 0; col < blck_size; col++)
+            {
+                matrixA[row][col] = matrix_partial_solution[row][col];
+                matrixB[row][col] = matrix_partial_solution[row][col];
+                matrix_partial_solution[row][col] = MY_INFINITY;
+            }
+        }
+
+        if (traveled_distance == 0)
+        {
+            traveled_distance++;
+        }
+        else
+        {
+            traveled_distance *= 2;
+        }
     }
-    print_matrix(my_rank, blck_size, matrix_partial_solution, CUSTOM_PRINT);
+
+    // solution is now in matrixA because we copied it
+    print_matrix(my_rank, blck_size, matrixA, CUSTOM_PRINT);
+
+    // we need to replace all infinity with 0
+    // we need to reorder it and gather in rank 0 process
+
+    // MPI_Gather(matrixA, info->count_of_elements_in_block, MPI_INT, solution_matrix, info->count_of_elements_in_block, MPI_INT, 0, MPI_COMM_WORLD);
 
     MPI_Finalize();
 
