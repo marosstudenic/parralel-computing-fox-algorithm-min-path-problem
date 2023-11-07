@@ -2,6 +2,7 @@
 
 # Compile the floyd-warshal executable
 gcc floyd-warshal.c -o floyd-warshal
+make
 
 # Array of input file sizes
 inputs=("6" "300" "600" "900" "1200")
